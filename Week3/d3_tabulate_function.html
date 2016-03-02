@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>College Enrollment Percentages, 2000 versus 2012</title>
+		<style>
+			table {
+			/*	border: 1px solid black;*/
+			}
+
+			td {
+				/*border-left: 1px solid black;
+				border-bottom: 1px solid black;
+				margin: 0;*/
+				padding: 1em;
+			}
+
+			table thead tr th {
+				padding: 0.5em;
+			}
+
+			table thead tr th:hover {
+				cursor: pointer;
+			}
+
+			table thead tr:nth-child(2n+1), tr:nth-child(2n) {
+				background-color: #d3d3d3;
+			}
+
+			.container {
+				width: 75%;
+				display: block;
+				margin: 0 auto;
+			}
+
+		</style>
+
+	</head>
+	<body>
+		<div class="container">
+			<h1>College Enrollment Percentages, 2000 versus 2012</h1>
+			<p>Source: Data.gov, U.S. Department of Commerce, Census Bureau, Current Population Survey</p>
+			<p>The data portrays the percentage of 18 to 24-year-olds per race/ethnicity who attend 2 or 4-year colleges. For example, in 2000, 21.7 percent of all Hispanics between age 18 and 24 attended college. By 2012, that percentage increased by about 16 percent to 37.5 percent.</p>
+			<div id="table"></div>
+		</div> <!-- End container -->
+	</body>
+
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+
+		<!-- load the function file you need before you call it... -->
+		<script type="text/javascript" src="tabulate.js"></script>
+		<script type="text/javascript" src="stupidtable.js"></script>
+
+		<script type="text/javascript">
+
+			//Load in contents of CSV file, and do things to the data.
+
+			d3.csv("college_enrollment_data0.csv", function(error, data) {
+
+				if (error) {
+					console.log("Had an error loading file.");
+				}
+
+				data.forEach(function(d, i){
+					// now we add another data object value, a calculated value.
+					d.change = (d["2012"] - d["2000"]).toPrecision(3);
+				});
+
+				// Sorts array items by alphabetical order with the
+				//   "Race or Ethnicity" column.
+				var mySort = function(a,b) {
+
+					if (a["Race or Ethnicity"] > b["Race or Ethnicity"]) {
+						return 1;
+					}
+
+					if (a["Race or Ethnicity"] < b["Race or Ethnicity"]) {
+						return -1;
+					}
+
+					return 0;
+				}
+
+				//console.log(data);
+				data.sort(mySort);
+
+				// the tabulate function wants the second argument to be your columns in your data that will be in the table.
+				// third argument is the element to put it into on the page
+				var regionTable = tabulate(data,
+					                        ["Race or Ethnicity", "2000", "2012", "change"],
+					                        "#table");
+
+				// Now we are adding attributes to the existing header cells here, for use
+				// in the jquery function below.
+				d3.selectAll("th")
+					.data(["string", "float", "float", "float"])
+					.attr("data-sort", function(d) {return d;});
+
+				// Now that the table exists - we can use it with JQuery functions!
+				$("table").stupidtable();
+
+				// Excercises for you if you want: Fix the names in the data and table so they look nicer.
+				// Sort the data by whatever you think is most interesting. What problem does that cause?
+				// Add a style sheet to make this table look nice!
+
+
+
+			});
+
+		</script>
+
+</html>

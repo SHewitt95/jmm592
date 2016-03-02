@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>College Enrollment Percentages, 2000 versus 2012</title>
+		<style>
+			table {
+			/*	border: 1px solid black;*/
+			}
+
+			td {
+				/*border-left: 1px solid black;
+				border-bottom: 1px solid black;
+				margin: 0;*/
+				padding: 1em;
+			}
+
+			table thead tr th {
+				padding: 0.5em;
+			}
+
+			table thead tr th:hover {
+				cursor: pointer;
+			}
+
+			table thead tr:nth-child(2n+1) {
+				background-color: #d3d3d3;
+			}
+
+			.container {
+				width: 75%;
+				display: block;
+				margin: 0 auto;
+			}
+
+			.pink {
+				background-color: pink;
+			}
+
+		</style>
+
+	</head>
+	<body>
+		<div class="container">
+			<h1>College Enrollment Percentages, 2000 versus 2012</h1>
+			<p>Source: Data.gov, U.S. Department of Commerce, Census Bureau, Current Population Survey</p>
+			<p>The data portrays the percentage of 18 to 24-year-olds per race/ethnicity who attend 2 or 4-year colleges. For example, in 2000, 21.7 percent of all Hispanics between age 18 and 24 attended college. By 2012, that percentage increased by about 16 percent to 37.5 percent.</p>
+			<div id="table"></div>
+		</div> <!-- End container -->
+	</body>
+
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+
+		<!-- load the function file you need before you call it... -->
+		<script type="text/javascript" src="tabulate.js"></script>
+		<script type="text/javascript" src="stupidtable.js"></script>
+
+		<script type="text/javascript">
+
+			//Load in contents of CSV file, and do things to the data.
+
+			d3.csv("college_enrollment_data0.csv", function(error, data) {
+
+				if (error) {
+					console.log("Had an error loading file.");
+				}
+
+				data.forEach(function(d, i){
+					// now we add another data object value, a calculated value.
+					d["Change (Percentage)"] = (d["2012"] - d["2000"]).toPrecision(3);
+				});
+
+				//console.log(data);
+				data.sort(function(a,b) { return d3.ascending(a["Race or Ethnicity"], b["Race or Ethnicity"]);});
+
+				// the tabulate function wants the second argument to be your columns in your data that will be in the table.
+				// third argument is the element to put it into on the page
+				var regionTable = tabulate(data,
+					                        ["Race or Ethnicity", "2000", "2012", "Change (Percentage)"],
+					                        "#table");
+
+				var cellsToHeatMap = d3.selectAll("#table table tbody tr td:nth-child(4)");
+				var colorScale = d3.scale.linear()
+				              	.domain([3.4, 15.8])
+				              	.range(["#98fb98", "orange"]);
+
+				cellsToHeatMap.style("background-color", function(d,i) {
+					return colorScale(+d.value);
+				})
+
+
+
+				/*cellsToHeatMap[0].forEach(function(cell) {
+					var value = +cell.innerText;
+
+					d3.select(cell)
+						.style("background-color", function(value) {
+							return colorScale(value);
+						});
+				})*/
+
+			/*	var tableBox = d3.select("#table");
+
+				var table = tableBox.append("table"),
+						thead = table.append("thead"),
+						theadRow = thead.append("tr"),
+						tbody = table.append("tbody");
+
+				var headers = ["Race or Ethnicity", "Percentage in 2000", "Percentage in 2012", "Difference in Percentage"];
+
+				theadRow.selectAll("th")
+							.data(headers)
+							.enter()
+							.append("th")
+							.text(function(d, i) {return d;});
+
+				var rows = tbody.selectAll("tr")
+											 .data(data) // Ties data to each row.
+											 .enter()
+											 .append("tr");
+
+				var cells = rows.selectAll("td")
+												.data(function(d) {return d;})
+												.enter()
+												.append("td")
+												.text(function(d,i) {return d;});*/
+
+				// Now we are adding attributes to the existing header cells here, for use
+				// in the jquery function below.
+				d3.selectAll("th")
+					.data(["string", "float", "float", "float"])
+					.attr("data-sort", function(d) {return d;});
+
+				// Now that the table exists - we can use it with JQuery functions!
+				$("table").stupidtable();
+
+			});
+
+		</script>
+
+</html>

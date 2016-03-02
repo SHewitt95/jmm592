@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<!-- Modified version of Scott Murray's file from Knight D3 course -->
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Horizontal Bar - Dynamic Domain</title>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+		<style type="text/css">
+
+			body {
+				background-color: #ddddff;
+			}
+
+			svg {
+				background-color: white;
+			}
+
+			.hover {
+				fill: blue;
+			}
+
+			.labels {
+
+			}
+
+		</style>
+	</head>
+	<body>
+
+		<h1>Change in College Enrollment Percentages between 2000 and 2012, age 18-24</h1>
+		<p>Source: Data.gov, U.S. Department of Commerce, Census Bureau, Current Population Survey</p>
+		<p>The data portrays the percentage of 18 to 24-year-olds per race/ethnicity who attend 2 or 4-year colleges. For example, in 2000, 21.7 percent of all Hispanics between age 18 and 24 attended college. By 2012, that percentage increased by about 16 percent to 37.5 percent.</p>
+
+		<script type="text/javascript">
+
+
+		// this is the size of the svg container -- the white part
+			var fullwidth = 1000,
+					fullheight = 500;
+
+			// these are the margins around the graph. Axes labels go in margins.
+			// so there is a giant left margin because of the strings on the left side.
+			var margin = {top: 20, right: 25, bottom: 45, left: 200};
+
+			var width = fullwidth - margin.left - margin.right,
+					height = fullheight - margin.top - margin.bottom;
+
+			var widthScale = d3.scale.linear()
+								.range([0, width]);
+
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", fullwidth)
+						.attr("height", fullheight)
+						.append("g")
+							.attr("transform", "translate(" + (margin.left-25) + "," + margin.top + ")");;
+
+			// this will space out the bars between the top margin and chart height
+			// remember 0 is the top for the height, so height == bottom.
+			var heightScale = d3.scale.ordinal()
+								.rangeRoundBands([ 0, height], 0.2);
+
+			var xAxis = d3.svg.axis()
+							.scale(widthScale)
+							.orient("bottom");
+
+			// this will create the bar labels for us, given the domain of their strings!
+			var yAxis = d3.svg.axis()
+							.scale(heightScale)
+							.orient("left")
+							.innerTickSize([10]);
+
+			// X-Axis Label
+			svg.append("text")
+				    .attr("class", "xlabel")
+				    .attr("transform", "translate(" + (margin.left) + " ," +  (height + margin.bottom/1.5) + ")")
+				    .style("text-anchor", "middle")
+				    .attr("dy", "12")
+				    .text("Change between 2000 and 2012 (%)");
+
+			d3.csv("college_enrollment_data0.csv", function(error, data) {
+
+				if (error) {
+					console.log(error);
+				}
+
+				data.forEach(function(d, i){
+					// now we add another data object value, a calculated value.
+					d.change = (d["2012"] - d["2000"]).toPrecision(3);
+				});
+
+				data.sort(function(a, b) {
+					return d3.descending(+a.change, +b.change); // make numeric
+				});
+
+				// set up the domain here, from the data i read in. I'm starting at 0, not min.
+				widthScale.domain([ 0, d3.max(data, function(d) {
+					return +d.change;
+				}) ]);
+
+				// js map: will make a new array out of all the d["Race or Ethnicity"] fields:
+				heightScale.domain(data.map(function(d) { return d["Race or Ethnicity"]; } ));
+
+/*
+				var rects = svg.selectAll("rect")
+						.data(data)
+						.enter()
+						.append("rect");*/
+
+				var rects = svg.selectAll("g")
+										.data(data)
+										.enter()
+										.append("g")
+										//.style("position", "relative")
+										.classed("bars", true)
+										.append("rect");
+
+				// Creates text labels for the bars.
+				var myLabels = d3.selectAll(".bars")
+											.append("text")
+											//.style("position", "absolute")
+											.attr("x", width)
+											.text(function(d) {
+												return +d.change;
+											})
+
+				// add the axes
+
+				svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0" + "," + height + ")")
+					.call(xAxis)
+
+				svg.append("g")
+					.attr("class", "y axis")
+					//.attr("transform", "translate(" + margin.left/1.25 + "," + margin.top/4 + ")")
+					.call(yAxis);
+
+				rects
+					.attr("x", 0)
+					.attr("y", function(d, i) {
+						return heightScale(d["Race or Ethnicity"]);
+					})
+					//.attr("transform", "translate(0," + (margin.top + (height/32)) + ")")
+					.attr("width", function(d) {
+						return widthScale(+d.change); // use your scale here:
+					})
+					.attr("height", heightScale.rangeBand())
+					.style("fill", function(d){
+						if (d["Race or Ethnicity"] === "Hispanic") {
+							return "orange"; // special case file, could have been done by a class.
+						}
+					})
+					.on("mouseover", function() {
+						d3.select(this).classed("hover", true);
+					})
+					.on("mouseout", function() {
+						d3.select(this).classed("hover", false);
+					});
+
+
+				myLabels
+				.attr("x", function(d) {
+					return widthScale(+d.change);
+				})
+				.attr("y", function(d) {
+					return heightScale(d["Race or Ethnicity"]);
+				})
+				.attr("transform", "translate(" + margin.right/2 + "," + margin.top*2 + ")");
+
+			});
+
+
+		</script>
+
+	</body>
+</html>

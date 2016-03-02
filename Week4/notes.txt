@@ -1,0 +1,22 @@
+d3.select("#svg_9")
+d3.selectAll("rect").attr("fill", "pink")
+
+min = 0;
+max = 10000;
+
+linearScale = d3.scale.linear()
+              .domain([min, max])
+              .range([0, 100])
+
+linearScale(500) = 5
+linearScale(10000) = 100
+
+colorScale = d3.scale.linear()
+              .domain([min, max])
+              .range(["gray", "red"])
+
+colorScale(2) = gray
+
+d3.scale.ordinal()
+.domain(["apples", "banana", "blueberry"])
+.range(["red", "yellow", "blue"])
