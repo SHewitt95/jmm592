@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!-- Modification of an example by Scott Murray from Knight D3 course -->
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Line Chart with Multiple Data Sets, Transitions</title>
+
+		<!-- this is the cdn link to bootstrap's css -->
+		<!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"-->
+
+		<style type="text/css">
+
+			body {
+				background-color: white;
+				font-family: Helvetica, Arial, sans-serif;
+			}
+
+			h1 {
+				font-size: 24px;
+				margin: 0;
+			}
+
+			p {
+				font-size: 14px;
+				margin: 10px 0 10px 0;
+			}
+
+			.selected {
+				background-color: pink;
+			}
+
+			svg {
+				background-color: white;
+			}
+
+			.axis path,
+			.axis line {
+				fill: none;
+				stroke: #ccc;
+				stroke-width: 1px;
+			}
+
+			.line {
+				fill: none;
+				stroke: black;
+				stroke-width: 1px;
+				stroke-opacity: 80%;
+			}
+
+			.axis text {
+				font-family: sans-serif;
+				font-size: 11px;
+				line-height: 1em;
+			}
+
+			.map_note {
+				padding-top: 120px;
+				padding-left: 30px;
+			}
+
+			.tooltip {
+				position: absolute;
+				z-index: 10;
+			}
+
+			.tooltip p {
+				background-color: white;
+				border: none;
+				padding: 2px;
+			}
+
+			/* this is an adjustment to bootstrap's row for my page */
+			.row {
+				padding-top: 0px;
+			}
+
+			/* this is an adjustment to bootstrap for my page */
+			.btn-group {
+				padding-top: 20px;
+			}
+
+		</style>
+	</head>
+	<body>
+
+		<div class="container">
+			<div class="row">
+        <div class="">
+          <h1>College Enrollment Percentages, based on race/ethnicity and gender</h1>
+					<p>Source: Data.gov, U.S. Department of Commerce, Census Bureau, Current Population Survey</p>
+					<p>The data portrays the changing percentages of 18 to 24-year-olds per race/ethnicity who attend 2 or 4-year colleges. In addition, the data separates the races by gender. For example, in 2000, 18.5 percent of Hispanic males between age 18 and 24 attended college. By 2012, that percentage increased by 15 percent to 33.5 percent.</p>
+					<p>Click the buttons below to cycle through the different data points.</p>
+
+									<br />
+
+									<h2 id="graph_title"></h2>
+						<div id="svg"></div>
+        </div>
+      </div>
+
+	</div>
+
+	<!--
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	-->
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+		<!--script type="text/javascript" src="d3.min.js"></script-->
+    <script src="https://d3js.org/queue.v1.min.js"></script>
+
+		<script type="text/javascript">
+
+      //Dimensions and padding
+      var fullwidth = 950;
+      var fullheight = 500;
+      var margin = {top: 20, right: 20, bottom: 40, left: 50};
+
+      var width = fullwidth - margin.left - margin.right;
+      var height = fullheight - margin.top - margin.bottom;
+
+
+		</script>
+
+		<!-- Latest compiled and minified JavaScript -->
+	</body>
+</html>
