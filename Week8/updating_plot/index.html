@@ -92,7 +92,10 @@
 					<p>Source: Data.gov, U.S. Department of Commerce, Census Bureau, Current Population Survey</p>
 					<p>The data portrays the changing percentages of 18 to 24-year-olds per race/ethnicity who attend 2 or 4-year colleges. In addition, the data separates the races by gender. For example, in 2000, 18.5 percent of Hispanic males between age 18 and 24 attended college. By 2012, that percentage increased by 15 percent to 33.5 percent.</p>
 					<p>Click the buttons below to cycle through the different data points.</p>
-
+					<div class="btn-group" role="group" aria-label="...">
+						<button type="button" class="btn btn-default selected" id="Total">See Total Percentage</button>
+						<button type="button" class="btn btn-default" id="Gender">See Percentage by Gender</button>
+					</div>
 									<br />
 									<h2 id="graph_title"></h2>
 
@@ -120,6 +123,14 @@
 
       var width = fullwidth - margin.left - margin.right;
       var height = fullheight - margin.top - margin.bottom;
+
+			var widthScale = d3.scale.linear()
+								.range([0, width]);
+
+			// this will space out the bars between the top margin and chart height
+			// remember 0 is the top for the height, so height == bottom.
+			var heightScale = d3.scale.ordinal()
+								.rangeRoundBands([ 0, height], 0.2);
 
       //Set up scales - I already know the start and end years, not using data for it.
 			var xScale = d3.time.scale()
@@ -151,7 +162,20 @@
 			var dateFormat = d3.time.format("%Y");
 			var outputFormat = d3.time.format("%Y");
 
-      //Configure line generator
+      // add a tooltip to the page - not to the svg itself!
+			var tooltip = d3.select("body")
+      	.append("div")
+      	.attr("class", "tooltip");
+
+			//Create the empty SVG image
+			var svg = d3.select("#svg")
+						.append("svg")
+						.attr("width", fullwidth)
+						.attr("height", fullheight)
+						.append("g")
+						.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+			//Configure line generator
 			// each line dataset must have an x and y for this to work.
 			var line = d3.svg.line()
 				.x(function(d) {
@@ -161,19 +185,6 @@
 					return yScale(+d.percent);
 				});
 
-        // add a tooltip to the page - not to the svg itself!
-  			var tooltip = d3.select("body")
-        	.append("div")
-        	.attr("class", "tooltip");
-
-  			//Create the empty SVG image
-  			var svg = d3.select("#svg")
-  						.append("svg")
-  						.attr("width", fullwidth)
-  						.attr("height", fullheight)
-  						.append("g")
-  						.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
       queue()
             .defer(d3.csv, "Race_Education_Data_Male_Female.csv")  // maleFemale
             .defer(d3.csv, "Race_Education_Data_Total.csv") // total
@@ -181,10 +192,32 @@
 
       function doStuff(error, maleFemale, total) {
 
-        var dataGender = [],
-            dataTotal = [];
-
         var years = d3.keys(total[0]).slice(0, 13);
+
+				/*total.forEach(function(d) {
+					delete d.Years;
+				});
+
+				var arr = Object.keys(total[0]).map(function (key) {return +total[0][key]});*/
+
+				//console.log(arr);
+
+
+
+				// set up the domain here, from the data i read in. I'm starting at 0, not min.
+				//widthScale.domain(d3.extent(arr));
+				//console.log(d3.extent(arr));
+
+				// js map: will make a new array out of all the d["Race or Ethnicity"] fields:
+				//heightScale.domain(total[0].map(function(d) { return d["Years"]; } ));
+				//console.log(Object.keys(total[0]).map(function(d) {return d["Years"]}));
+
+				//console.log(maleFemale);
+				//console.log(total);
+
+				var dataGender = [],
+						dataTotal = [],
+						dataFake = [];
 
         // Creates data array for maleFemale csv.
         maleFemale.forEach(function(d) {
@@ -212,6 +245,7 @@
         total.forEach(function(d) {
 
           var totalPerYear = [];
+					var fakeData = [];
 
           years.forEach(function(y) {
             if (d[y]) {
@@ -219,6 +253,11 @@
                 year: y,
                 percent: d[y]
               });
+
+							fakeData.push({
+								year: y,
+								percent: 0
+							});
             }
           });
 
@@ -226,10 +265,111 @@
             data: totalPerYear
           });
 
+					dataFake.push({
+						data: fakeData
+					});
+
         }); // End forEach for total
 
         //console.log(dataGender);
         //console.log(dataTotal);
+				//console.log(dataFake);
+
+				xScale.domain(
+					d3.extent(years, function(d) {
+					return dateFormat.parse(d);
+				}));
+
+				var dataGenderYScale = yScale.domain([
+					d3.max(dataGender, function(d) {
+						return d3.max(d.data, function(d) {
+							return +d.percent;
+						});
+					}),
+					0
+				]);
+
+				var dataTotalYScale = yScale.domain([
+					d3.max(dataTotal, function(d) {
+						return d3.max(d.data, function(d) {
+							return +d.percent;
+						});
+					}),
+					0
+				]);
+
+				var groupTotal = svg.selectAll("g.total")
+					.data(dataTotal)
+					.enter()
+					.append("g")
+					//.attr("class", "lines")
+					.attr("class", "total");
+
+				groupTotal.selectAll("path")
+					.data(function(d) { // because there's a group with data per race already...
+						return [ d.data ]; // Returns the dataTotal object's data.
+					})
+					.enter()
+					.append("path")
+					.attr("class", "line")
+					.attr("d", line); // calls the line function you defined above, using that array
+
+					/*var groupGender = svg.selectAll("g.gender")
+						.data(dataGender)
+						.enter()
+						.append("g")
+						//.attr("class", "lines")
+						.attr("class", "gender");
+
+
+					groupGender.selectAll("path")
+						.data(function(d) { // because there's a group with data per race already...
+							return [ d.data ]; // Returns the dataTotal object's data.
+						})
+						.enter()
+						.append("path")
+						.attr("class", "line")
+						.attr("d", line); // calls the line function you defined above, using that array*/
+
+					//Axes
+					svg.append("g")
+						.attr("class", "x axis")
+						.attr("transform", "translate(0," + height  + ")")
+						.call(xAxis);
+
+					svg.append("g")
+						.attr("class", "y axis")
+						.call(yAxis);
+
+					var allButtons = d3.selectAll("button");
+
+					function drawTwoLines() {
+
+					}
+
+					function drawSingleLine() {
+						
+					}
+
+					allButtons.on("click", function() {
+						allButtons.classed("selected", false);
+						// Handle the button click to change the data set.
+						var selectedline = d3.select("path.line");
+						var thisButton = d3.select(this);
+						thisButton.classed("selected", true);
+
+						if (thisButton.attr("id") === "Gender") {
+							console.log("Gender!");
+							// drawTwoLines();
+						} else {
+							console.log("Total!");
+							// drawSingleLine();
+						}
+
+
+
+					});
+
 
 
       }

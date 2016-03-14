@@ -84,10 +84,14 @@
 					console.log(error);
 				}
 
+				console.log(data);
+
 				data.forEach(function(d, i){
 					// now we add another data object value, a calculated value.
 					d.change = (d["2012"] - d["2000"]).toPrecision(3);
 				});
+
+				console.log(data);
 
 				data.sort(function(a, b) {
 					return d3.descending(+a.change, +b.change); // make numeric
