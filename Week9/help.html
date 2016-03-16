@@ -40,6 +40,25 @@ var nestByCountry = d3.nest()
 
   console.log(nestByCountry);
 
+  var dateFormat = d3.time.format("Year %Y");
+  var outputFormat = d3.time.format("%Y");
+
+  var nestByYear = d3.nest()
+    .key(function(d) {
+      return outputFormat(dateFormat.parse(d.Year));})
+    .sortKeys(function(a,b) {
+      console.log(a, b);
+      // TODO: How would you sort these?  think about using your date formats, and check what a and b are.
+      return d3.ascending(a, b);
+    })
+    .entries(data);
+
+    console.log(nestByYear);
+
+    var years = nestByYear.map(function(d) { return d["key"]; });
+
+    console.log(years);
+
 });
 </script>
 

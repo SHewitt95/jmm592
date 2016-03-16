@@ -54,20 +54,20 @@ var nestByYear = d3.nest()
   .key(function(d) {
     return outputFormat(dateFormat.parse(d.Year));})
   .sortKeys(function(a,b) {
-    console.log(a, b);
-    // TODO: How would you sort these?  think about using your date formats, and check what a and b are.
+    //console.log(a, b);
+    return d3.ascending(a, b);
   })
   .entries(data);
 
   console.log("nest By Year", nestByYear[0]);
 
-  var years = // TODO: use a map function on the nestByYear to get the years as strings in an array.
+  var years = nestByYear.map(function(d) { return d["key"]; });
 
   console.log(years);
 
-  var maxMeaslesFor2013 = //TODO: find the max measles in 2012 using the nestByYear results, using maps, filters, d3.max, d3.keys, d3.values, etc.  There are several ways.
+  var maxMeaslesFor2013 = //TODO: find the max measles in 2013 using the nestByYear results, using maps, filters, d3.max, d3.keys, d3.values, etc.  There are several ways.
 
-  console.log(maxMeaslesFor2012);
+  console.log(maxMeaslesFor2013);
 
   var nestByCountryYear = d3.nest()
   // TODO: nest by country, then by year.
