@@ -88,13 +88,13 @@
 		<div class="container">
 			<div class="row">
         <div class="">
-          <h1>College Enrollment Percentages, based on race/ethnicity and gender</h1>
+          <h1>College Enrollment Percentages</h1>
 					<p>Source: Data.gov, U.S. Department of Commerce, Census Bureau, Current Population Survey</p>
-					<p>The data portrays the changing percentages of 18 to 24-year-olds per race/ethnicity who attend 2 or 4-year colleges. In addition, the data separates the races by gender. For example, in 2000, 18.5 percent of Hispanic males between age 18 and 24 attended college. By 2012, that percentage increased by 15 percent to 33.5 percent.</p>
-					<p>Click the buttons below to cycle through the different data points.</p>
+					<p>The data portrays two sets of statistics: the total changing percentage of 18 to 24-year-olds who attend 2 or 4-year colleges, and that same group of people divided by gender. For example, in 2000, 35.5 percent of everyone between age 18 and 24 attended college. By 2012, that percentage increased to 40.1 percent.</p>
+					<p>Click the buttons below to switch between the two sets of data. Red represents females while blue represents males.</p>
 					<div class="btn-group" role="group" aria-label="...">
-						<button type="button" class="btn btn-default selected" id="Total">See Total Percentage</button>
-						<button type="button" class="btn btn-default" id="Gender">See Percentage by Gender</button>
+						<button type="button" class="btn btn-default" id="Total">See Total Percentage</button>
+						<button type="button" class="btn btn-default selected" id="Gender">See Percentage by Gender</button>
 					</div>
 									<br />
 									<h2 id="graph_title"></h2>
@@ -112,25 +112,18 @@
 	-->
 		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 		<!--script type="text/javascript" src="d3.min.js"></script-->
+		<!--script type="text/javascript" src="queue.v1.min.js"></script-->
     <script src="https://d3js.org/queue.v1.min.js"></script>
 
 		<script type="text/javascript">
 
       //Dimensions and padding
       var fullwidth = 950;
-      var fullheight = 500;
-      var margin = {top: 20, right: 20, bottom: 40, left: 50};
+      var fullheight = 550;
+      var margin = {top: 20, right: 30, bottom: 40, left: 50};
 
       var width = fullwidth - margin.left - margin.right;
       var height = fullheight - margin.top - margin.bottom;
-
-			var widthScale = d3.scale.linear()
-								.range([0, width]);
-
-			// this will space out the bars between the top margin and chart height
-			// remember 0 is the top for the height, so height == bottom.
-			var heightScale = d3.scale.ordinal()
-								.rangeRoundBands([ 0, height], 0.2);
 
       //Set up scales - I already know the start and end years, not using data for it.
 			var xScale = d3.time.scale()
@@ -289,16 +282,16 @@
 					0
 				]);
 
-				var dataTotalYScale = yScale.domain([
+				/*var dataTotalYScale = yScale.domain([
 					d3.max(dataTotal, function(d) {
 						return d3.max(d.data, function(d) {
 							return +d.percent;
 						});
 					}),
 					0
-				]);
+				]);*/
 
-				var groupTotal = svg.selectAll("g.total")
+				/*var groupTotal = svg.selectAll("g.total")
 					.data(dataTotal)
 					.enter()
 					.append("g")
@@ -312,14 +305,44 @@
 					.enter()
 					.append("path")
 					.attr("class", "line")
-					.attr("d", line); // calls the line function you defined above, using that array
+					.attr("d", line); // calls the line function you defined above, using that array*/
 
-					/*var groupGender = svg.selectAll("g.gender")
+					var groupGender = svg.selectAll("g.gender")
 						.data(dataGender)
 						.enter()
 						.append("g")
 						//.attr("class", "lines")
 						.attr("class", "gender");
+
+					var textGroup = svg.selectAll("g.myText")
+						.data(dataTotal)
+						.enter()
+						.append("g")
+						.attr("class", "myText");
+
+					var textNoteTotal = textGroup.selectAll("text.totalText")
+						.data(function(d) {
+							return d.data;
+						})
+						.enter()
+						.append("text")
+						.attr("class", "totalText");
+
+					textNoteTotal.attr("x", function(d, i) {
+										//console.log(d);
+										return xScale(dateFormat.parse(d.year));
+									})
+									.attr("y", function(d, i) {
+										return 9999;
+									})
+									.attr("dy", "-7")
+									.style("font-size", "0.75em")
+									.text(function(d) {
+										return d.percent;
+									});
+
+
+						console.log(dataTotal);
 
 
 					groupGender.selectAll("path")
@@ -331,6 +354,13 @@
 						.attr("class", "line")
 						.attr("d", line); // calls the line function you defined above, using that array*/
 
+					// Grabs individual lines and colors them.
+					var lines = d3.selectAll("path.line");
+					var firstLine = d3.select(lines[0][0]);
+					var secondLine = d3.select(lines[0][1]);
+					firstLine.style("stroke", "blue"); // Male
+					secondLine.style("stroke", "red"); // Female
+
 					//Axes
 					svg.append("g")
 						.attr("class", "x axis")
@@ -341,29 +371,120 @@
 						.attr("class", "y axis")
 						.call(yAxis);
 
+					// Adds text to each point on the lines.
+					var textNote = groupGender.selectAll("text.genderText")
+													.data(function(d) {
+														//console.log(d);
+														return d.data;
+													})
+													.enter()
+													.append("text")
+													.attr("class", "genderText");
+
+					textNote.attr("x", function(d, i) {
+										//console.log(d);
+										return xScale(dateFormat.parse(d.year));
+									})
+									.attr("y", function(d, i) {
+										return yScale(d.percent);
+									})
+									.attr("dy", "-7")
+									.style("font-size", "0.75em")
+									.text(function(d) {
+										return d.percent;
+									});
+
 					var allButtons = d3.selectAll("button");
 
-					function drawTwoLines() {
+					function drawTwoLines(lines) {
+
+						//lines.transition().attr("d", line(dataGender[0].data));
+						//console.log(d3.select(lines[0][1]));
+						var firstLine = d3.select(lines[0][0]);
+						var secondLine = d3.select(lines[0][1]);
+
+						var dataGenderYScale = yScale.domain([
+							d3.max(dataGender, function(d) {
+								return d3.max(d.data, function(d) {
+									return +d.percent;
+								});
+							}),
+							0
+						]);
+
+						firstLine.transition().attr("d", line(dataGender[0].data)).style("stroke", "blue");
+						secondLine.transition().attr("d", line(dataGender[1].data)).style("stroke", "red");
+
+						textNoteTotal.transition()
+							.attr("y", function(d) {
+								return 9999;
+							});
+
+						textNote.transition()
+							.attr("y", function(d) {
+								return yScale(d.percent);
+							})
+							.attr("x", function(d) {
+								return xScale(dateFormat.parse(d.year));
+							});
+
+						svg.transition().select("g.y.axis") // select it with whatever class you assigned,
+                                    // and re-"call" the axis
+      												.call(yAxis);
 
 					}
 
-					function drawSingleLine() {
-						
+					function drawSingleLine(lines) {
+
+						var dataTotalYScale = yScale.domain([
+							d3.max(dataTotal, function(d) {
+								return d3.max(d.data, function(d) {
+									return +d.percent;
+								});
+							}),
+							0
+						]);
+
+						lines.transition().attr("d", line(dataTotal[0].data)).style("stroke", "black");
+
+						textNote.transition()
+							.attr("y", function(d) {
+								return 9999;
+							});
+
+						textNoteTotal.transition()
+							.attr("y", function(d) {
+								return yScale(d.percent);
+							})
+							.attr("x", function(d) {
+								return xScale(dateFormat.parse(d.year));
+							});
+
+						svg.transition().select("g.y.axis") // select it with whatever class you assigned,
+                                    // and re-"call" the axis
+      												.call(yAxis);
+
 					}
 
 					allButtons.on("click", function() {
 						allButtons.classed("selected", false);
 						// Handle the button click to change the data set.
-						var selectedline = d3.select("path.line");
+						//var selectedline = d3.select("path.line");
+					//	console.log(selectedline);
+						var lines = d3.selectAll("path.line");
+						//console.log(lines);
+
+
+
 						var thisButton = d3.select(this);
 						thisButton.classed("selected", true);
 
 						if (thisButton.attr("id") === "Gender") {
-							console.log("Gender!");
-							// drawTwoLines();
+							//console.log("Gender!");
+							drawTwoLines(lines);
 						} else {
-							console.log("Total!");
-							// drawSingleLine();
+							//console.log("Total!");
+							drawSingleLine(lines);
 						}
 
 

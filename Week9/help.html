@@ -1,0 +1,46 @@
+<!doctype html>
+
+<html>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script>
+d3.csv("data/deaths_04yearsold_excerpt.csv", function(error, data) {
+//  console.log(data);
+
+  var illnesses = d3.keys(data[0]).filter(function (d) {
+      // TODO: how do you get all the keys that are not country or year?
+      if (d != "Country" && d != "Year") {
+        return d;
+      }
+  });
+
+  console.log(illnesses);
+
+  data.forEach(function(d) {
+      var sum = 0;
+      // TODO: how would you use the illnesses list to get the total for each row's illnesses? use a forEach.
+      illnesses.forEach(function(i) {
+        sum += +d[i];
+      });
+      d.total = sum;
+    });
+
+console.log("totals", data);
+
+var countryNames = data.map(function(d) { return d["Country"] });
+
+countryNames.sort(function(a,b) { return d3.ascending(a["Country"], b["Country"]);});
+
+console.log(countryNames);
+
+var nestByCountry = d3.nest()
+  .key(function(d) {return d.Country;})
+  .sortKeys(d3.ascending)
+  .entries(data);
+
+  console.log(nestByCountry);
+
+});
+</script>
+
+</html>
