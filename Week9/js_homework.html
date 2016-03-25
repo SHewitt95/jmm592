@@ -116,8 +116,15 @@ function do_stuff(error, data) {
       var countryData = {};
 
       countryData.country = d["countryName"];
-
       countryData.total = 0;
+
+      years.forEach(function(year) {
+
+        if (+d[year]) {
+          countryData.total += +d[year];
+        }
+
+      });
 
       //console.log(countryData);
       totals.push(countryData);
@@ -126,6 +133,8 @@ function do_stuff(error, data) {
   );
 
   console.log(totals.length, totals[0], totals[0].country, totals[0].total);
+
+  // moment.js, isotope.js
 
   // TODO: Write a JS function that would calculate what percentage of the total country's year emissions are -- e.g., if Algeria's 1961 value is 6065.218, what percent of the total is that?
 

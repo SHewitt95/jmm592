@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!-- Modification of Mike Bostock's code in http://bl.ocks.org/mbostock/1157787 -->
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+  margin: 20px;
+  padding: 20px;
+}
+
+.line {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+
+.area {
+  fill: #e7e7e7;
+}
+
+.label {
+  fill: steelblue;
+}
+
+.endpoint {
+  fill: #666;
+}
+
+.y.axis text {
+  fill: steelblue;
+}
+
+path.domain {
+  fill: none;
+  stroke: black;
+  stroke-width: 1;
+}
+
+</style>
+<body>
+
+  <h2>Relative Progress on Measles 2000-2013</h2>
+
+  <p>Source: WHO. Scales specified per country, sorted by worst final death count in 2013.</p>
+
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script>
+
+
+var fullheight = 150,
+  fullwidth = 375;
+
+var margin = {top: 30, right: 15, bottom: 20, left: 45},
+    width = fullwidth - margin.left - margin.right,
+    height = fullheight - margin.top - margin.bottom;
+
+var parseDate = d3.time.format("Year %Y").parse;
+var outputDate = d3.time.format("%Y");
+
+var xScale = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .3);
+
+var yScale = d3.scale.linear()
+    .rangeRound([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .orient("bottom")
+    .innerTickSize([0]);
+
+var yAxis = d3.svg.axis()
+      .orient("left")
+      .ticks(2)
+      .outerTickSize(0)
+      .innerTickSize(0)
+      .tickFormat(d3.format("s"));
+
+var tooltip = d3.select("body").append("div").attr("class", "tooltip");
+
+//d3.select("h2").text("Total Deaths Due to " + illness + " 2000-2013");
+
+d3.csv("Race_Gender_Education_Data.csv", function(error, data) {
+
+  //typeFix is a function that parses the dates and sets the strings to numeric. See below!
+  console.log("data after load", data);
+
+  /*
+Array[7] races
+  Object:
+    key: races
+    male: values
+    female: values
+  */
+
+  var years = d3.keys(data[0]).filter(function(d) {
+    // If d can be an actual a number (not a string), return it.
+    if (+d) {
+      return d;
+    }
+  });
+
+  var nestByRaces = d3.nest()
+    .key(function(d) { return d["Race_ethnicity"] })
+    .entries(data);
+
+  console.log(nestByRaces);
+
+  // sort by worst ending illness value!  Illness is a variable here, remember:
+  //nestByRaces.sort(function(a,b) { return a["key"] - b["key"]; });
+
+  xScale.domain(years);
+
+  // Add an SVG element for each symbol, with the desired dimensions and margin:
+  var svg = d3.select("body").selectAll("svg")
+      .data(nestByRaces) // the data for each graph
+    .enter().append("svg")
+      .attr("width", fullwidth)
+      .attr("height", fullheight)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+      .each(multiple); // uses each to call the multiple code for each country
+
+
+  function multiple(race) {
+
+    console.log(race);
+
+    var thisSVG = d3.select(this);
+
+    yScale.domain([0, 100]); // 100 = TEMPORARY VALUE FOR TESTING
+
+    // Axes
+    thisSVG.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll("text")
+          .attr("dy", ".5em")
+          .attr("transform", "rotate(-30)")
+          .style("text-anchor", "end");
+
+    thisSVG.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Number of People");
+
+    thisSVG.selectAll("rect")
+        .data(function(d) {
+        //  console.log("array for a rectangle", d);
+          return d["values"][0]; })  // this just gets the array for bar segment.
+      .enter().append("rect")
+        .attr("width", xScale.rangeBand())
+
+  } // end of the multiple function
+
+});
+
+</script>
