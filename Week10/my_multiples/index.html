@@ -59,10 +59,10 @@ var parseDate = d3.time.format("Year %Y").parse;
 var outputDate = d3.time.format("%Y");
 
 var xScale = d3.scale.ordinal()
-    .rangeRoundBands([0, width], .3);
+    .rangeRoundBands([0, width], .2);
 
 var yScale = d3.scale.linear()
-    .rangeRound([height, 0]);
+    .rangeRound([0, height]);
 
 var xAxis = d3.svg.axis()
     .scale(xScale)
@@ -70,6 +70,7 @@ var xAxis = d3.svg.axis()
     .innerTickSize([0]);
 
 var yAxis = d3.svg.axis()
+      .scale(yScale)
       .orient("left")
       .ticks(2)
       .outerTickSize(0)
@@ -80,7 +81,7 @@ var tooltip = d3.select("body").append("div").attr("class", "tooltip");
 
 //d3.select("h2").text("Total Deaths Due to " + illness + " 2000-2013");
 
-d3.csv("Race_Gender_Education_Data.csv", function(error, data) {
+d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
 
   //typeFix is a function that parses the dates and sets the strings to numeric. See below!
   console.log("data after load", data);
@@ -106,6 +107,8 @@ Array[7] races
 
   console.log(nestByRaces);
 
+  //var barsData = makeData(nestByRaces);
+
   // sort by worst ending illness value!  Illness is a variable here, remember:
   //nestByRaces.sort(function(a,b) { return a["key"] - b["key"]; });
 
@@ -122,13 +125,60 @@ Array[7] races
       .each(multiple); // uses each to call the multiple code for each country
 
 
+  /*function makeData(nestedData) {
+
+    //Array[7] races
+    //...Object - Key: race, Male: array, Female: array
+
+    var allData = [];
+
+    nestedData.forEach(function(data) {
+      var raceData = {};
+
+      raceData["key"] = data["key"];
+
+      raceData["Female"] = d3.map(data, function(d) {
+        if (+d) {
+          return +d;
+        }
+      });
+
+    /*  raceData["Female"] = d["values"].forEach(function(i) {
+        var allValues = d3.values(i);
+        var genderData = [];
+        //console.log(allValues);
+
+        allValues.forEach(function(j) {
+          console.log("gender", allValues[13]);
+          if ((+j || +j == 0) && allValues[13] == "Female") {
+            genderData.push(+j);
+          }
+        });
+
+        console.log("genderData", genderData);
+        return genderData;
+
+      });
+
+
+      console.log("raceData", raceData);
+    });
+
+    return allData;
+  }*/
+
   function multiple(race) {
 
-    console.log(race);
+    //console.log(race);
+    //console.log(race["values"][0]);
+    var values = d3.values(race["values"][0]);
+    //console.log("values", values);
+    var yearValues = values.slice(0,13);
+    //console.log("yearValues", yearValues);
 
     var thisSVG = d3.select(this);
-
-    yScale.domain([0, 100]); // 100 = TEMPORARY VALUE FOR TESTING
+    //var numbers = d3.values();
+    //console.log("Max val", d3.max(yearValues));
 
     // Axes
     thisSVG.append("g")
@@ -145,20 +195,58 @@ Array[7] races
         .call(yAxis)
       .append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 6)
-        .attr("dy", ".71em")
+        .attr("y", -20)
+        //.attr("dy", ".71em")
         .style("text-anchor", "end")
-        .text("Number of People");
+        .text("Percentage of People");
 
-    thisSVG.selectAll("rect")
+        yScale.domain([d3.max(yearValues), 0]);
+
+    /* yearGroup = thisSVG.selectAll("g.years")
         .data(function(d) {
-        //  console.log("array for a rectangle", d);
-          return d["values"][0]; })  // this just gets the array for bar segment.
-      .enter().append("rect")
-        .attr("width", xScale.rangeBand())
+          console.log(d);
+          return d;
+        })
+        .enter()
+        .append("g")
+        .attr("class", "years");
+        //.attr("width", xScale.rangeBand())
+        console.log(yearGroup);*/
+
+        var yearGroup = thisSVG
+                    .append("g")
+                    .attr("class", "years");
+
+        var bars = yearGroup.selectAll("rect")
+                  .data(years, function(d) {
+                    return d;
+                  })
+                  .enter().append("rect")
+                  .attr("x", function(d, i) {
+                    return xScale(years[i]);
+                  })
+                  .attr("y", function(d, i) {
+                    return height - yScale(yearValues[i]);
+                  })
+                  .attr("width", xScale.rangeBand())
+                  .attr("height", function(d, i) {
+                    return yScale(yearValues[i]);
+                  });
+                    //.attr("width", xScale.rangeBand())
+
+
+        //console.log(yearGroup.data());
 
   } // end of the multiple function
 
 });
+
+function typeFix(d) {
+  var i;
+  for (i = 2000; i < 2013; i++) {
+    d[i] = +d[i];
+  }
+  return d;
+}
 
 </script>

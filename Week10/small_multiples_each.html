@@ -120,7 +120,9 @@ d3.csv("deaths_04yearsold_excerpt.csv", typeFix, function(error, data) {
 
     var thisSVG = d3.select(this);
     // domain set in the function for each country's values
-    y.domain([0, d3.max(country.values, function(d) { return d[illness]; }]);
+    console.log(country.values);
+    y.domain([0, d3.max(country.values, function(d) { return d[illness]; })]);
+
 
 
     // Add the area path elements. Note: the y-domain is set per element.
