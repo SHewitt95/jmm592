@@ -171,9 +171,9 @@ Array[7] races
 
     //console.log(race);
     //console.log(race["values"][0]);
-    var values = d3.values(race["values"][0]);
+    var femaleValues = d3.values(race["values"][0]);
     //console.log("values", values);
-    var yearValues = values.slice(0,13);
+    var yearValues = femaleValues.slice(0,13);
     //console.log("yearValues", yearValues);
 
     var thisSVG = d3.select(this);
@@ -213,6 +213,17 @@ Array[7] races
         //.attr("width", xScale.rangeBand())
         console.log(yearGroup);*/
 
+        var graphTitle = thisSVG.selectAll("text.gTitle")
+                      .data(function(d) {
+                        return d;
+                      })
+                      .enter()
+                        .append("text")
+                        .attr("class", "gTitle")
+                        .text(function(d) {
+                          return d["key"];
+                        });
+
         var yearGroup = thisSVG
                     .append("g")
                     .attr("class", "years");
@@ -232,7 +243,11 @@ Array[7] races
                   .attr("height", function(d, i) {
                     return yScale(yearValues[i]);
                   });
-                    //.attr("width", xScale.rangeBand())
+
+          //bars
+            //.on("mouseover", mouseover)
+            //.on("mousemove", mousemove)
+            //.on("mouseout", mouseout);
 
 
         //console.log(yearGroup.data());
