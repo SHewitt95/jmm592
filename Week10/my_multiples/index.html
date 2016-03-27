@@ -138,6 +138,8 @@ d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
     //var numbers = d3.values();
     //console.log("Max val", d3.max(yearValues));
 
+    yScale.domain([0, d3.max(yearValues)]);
+
     // Axes
     thisSVG.append("g")
         .attr("class", "x axis")
@@ -158,130 +160,92 @@ d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
         .style("text-anchor", "end")
         .text("Percentage of People");
 
-        yScale.domain([0, d3.max(yearValues)]);
+    // Adds graph title to each SVG.
+    thisSVG.append("text")
+          .attr("class", "label")
+          .attr("x", width/2)
+          .attr("y", -8)
+          .style("text-anchor", "middle")
+          .text(function(d) { return d["key"]; })
 
-        // Adds graph title to each SVG.
-        thisSVG.append("text")
-              .attr("class", "label")
-              .attr("x", width/2)
-              .attr("y", -8)
+    var yearGroup = thisSVG
+                .append("g")
+                .attr("class", "years");
+
+    var barGroups = yearGroup.selectAll("g.barGroup")
+              .data(years, function(d) {
+                return d;
+              })
+              .enter().append("g")
+              .attr("class", "barGroup")
+              .attr("id", function(d) {
+                return "y" + d;
+              });
+
+    var bars = barGroups
+             .append("rect")
+             .attr("class", function(d) {
+               return "y" + d;
+             })
+             .style("fill", "orange")
+             .attr("x", function(d, i) {
+               return xScale(years[i]);
+             })
+             .attr("y", function(d, i) {
+               return yScale(yearValues[i]);
+             })
+             .attr("width", xScale.rangeBand())
+             .attr("height", function(d, i) {
+               return height - yScale(yearValues[i]);
+             });
+
+      var barLabels = barGroups
+              .append("text")
+              .attr("class", "barLabel")
+              .attr("x", function(d, i) {
+                return xScale(years[i]);
+              })
+              .attr("y", function(d, i) {
+                return yScale(yearValues[i]);
+              })
+              .attr("dx", 11)
+              .attr("dy", 12)
               .style("text-anchor", "middle")
-              .text(function(d) { return d["key"]; })
+              .style("display", "none")
+              .text(function(d, i) {
+                if (yearValues[i] != 0) {
+                  return yearValues[i];
+                }
+              });
 
-        var yearGroup = thisSVG
-                    .append("g")
-                    .attr("class", "years");
-
-        var barGroups = yearGroup.selectAll("g.barGroup")
-                  .data(years, function(d) {
-                    return d;
-                  })
-                  .enter().append("g")
-                  .attr("class", "barGroup");
-
-        var bars = barGroups
-                 .append("rect")
-                 .attr("class", function(d) {
-                   return "y" + d;
-                 })
-                 .style("fill", "orange")
-                 .attr("x", function(d, i) {
-                   return xScale(years[i]);
-                 })
-                 .attr("y", function(d, i) {
-                   return yScale(yearValues[i]);
-                 })
-                 .attr("width", xScale.rangeBand())
-                 .attr("height", function(d, i) {
-                   return height - yScale(yearValues[i]);
-                 });
-
-          var barLabels = barGroups
-                  .append("text")
-                  .attr("class", "barLabel")
-                  .attr("x", function(d, i) {
-                    return xScale(years[i]);
-                  })
-                  .attr("y", function(d, i) {
-                    return yScale(yearValues[i]);
-                  })
-                  .attr("dx", 11)
-                  .attr("dy", 12)
-                  .style("text-anchor", "middle")
-                  .text(function(d, i) {
-                    if (yearValues[i] != 0) {
-                      return yearValues[i];
-                    }
-                  });
-
-
-          //bars
-            //.on("mouseover", mouseover)
-            //.on("mousemove", mousemove)
-            //.on("mouseout", mouseout);
-
-
-
-        //console.log(yearGroup.data());
+        barGroups
+          .on("mouseover", mouseover)
+          .on("mouseout", mouseout);
 
   } // end of the multiple function
 
   function mouseover(d) {
-    var query = "rect." + "y" + d;
-    var allYearBars = d3.selectAll(query)
-      .transition()
-      .style("stroke", "black");
+    var groups = d3.selectAll("#" + "y" + d);
+    groups
+    .transition()
+    .style("stroke", "black");
 
-    allTooltips = makeToolTips(allYearBars);
-
-    allTooltips.forEach(function(d, i) {
-      d.style("display", null)
-  					 /*.html("<p>Year: " + d.year + "</p>"
-  					 			+ "<p>Race: " + d["key"] + "</p>"
-  					 			+ "<p>Percent: " + d.percent + "%</p>"
-  				 		)*/
-              .html(function(e, i) {
-                console.log(e);
-              })
-
-    });
+    groups.select("text")
+      .style("display", null)
+      .style("stroke", "none");
 
   }
 
   function mouseout(d) {
-    var query = "rect." + "y" + d;
-    var allYearBars = d3.selectAll(query)
-				.transition()
-				.style("stroke", "none");
+    var groups = d3.selectAll("#" + "y" + d);
+    groups
+    .transition()
+    .style("stroke", "none");
 
-			//tooltip.style("display", "none");  // this sets it to invisible!
+    groups.select("text")
+      .style("display", "none");
 
-      allTooltips.forEach(function(d) {
-        d.remove();
-      });
 	}
-
-  function mousemove(d) {
-    allTooltips.forEach(function(d) {
-      d.style("top", (d3.event.pageY - 10) + "px" )
-      .style("left", (d3.event.pageX + 10) + "px");
-    });
-
-  }
-
-  function makeToolTips(allYearBars) {
-    var data;
-    var tooltipsToReturn = [];
-
-    allYearBars.each(function(d) {
-      tooltip = d3.select("body").append("div").attr("class", "tooltip");
-      data = d3.select(this.parentNode.parentNode).data();
-      tooltip.data(data);
-      tooltipsToReturn.push(tooltip);
-    });
-
-    return tooltipsToReturn;
-  }
 
 });
 
