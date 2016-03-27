@@ -37,19 +37,31 @@ path.domain {
   stroke-width: 1;
 }
 
+.tooltip {
+  position: absolute;
+  z-index: 10;
+  background-color: white;
+  border: gray 1px solid;
+}
+
+.tooltip p {
+  padding: 2px;
+  max-width: 180px;
+}
+
 </style>
 <body>
 
-  <h2>Relative Progress on Measles 2000-2013</h2>
+  <h2>College Enrollment</h2>
 
-  <p>Source: WHO. Scales specified per country, sorted by worst final death count in 2013.</p>
+  <p>Source: Data.gov, U.S. Department of Commerce, Census Bureau, Current Population Survey</p>
 
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 <script>
 
 
 var fullheight = 150,
-  fullwidth = 375;
+  fullwidth = 450;
 
 var margin = {top: 30, right: 15, bottom: 20, left: 45},
     width = fullwidth - margin.left - margin.right,
@@ -62,7 +74,7 @@ var xScale = d3.scale.ordinal()
     .rangeRoundBands([0, width], .2);
 
 var yScale = d3.scale.linear()
-    .rangeRound([0, height]);
+    .range([height, 0]);
 
 var xAxis = d3.svg.axis()
     .scale(xScale)
@@ -77,7 +89,9 @@ var yAxis = d3.svg.axis()
       .innerTickSize(0)
       .tickFormat(d3.format("s"));
 
-var tooltip = d3.select("body").append("div").attr("class", "tooltip");
+var tooltip;
+
+var allTooltips = [];
 
 //d3.select("h2").text("Total Deaths Due to " + illness + " 2000-2013");
 
@@ -85,14 +99,6 @@ d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
 
   //typeFix is a function that parses the dates and sets the strings to numeric. See below!
   console.log("data after load", data);
-
-  /*
-Array[7] races
-  Object:
-    key: races
-    male: values
-    female: values
-  */
 
   var years = d3.keys(data[0]).filter(function(d) {
     // If d can be an actual a number (not a string), return it.
@@ -107,11 +113,6 @@ Array[7] races
 
   console.log(nestByRaces);
 
-  //var barsData = makeData(nestByRaces);
-
-  // sort by worst ending illness value!  Illness is a variable here, remember:
-  //nestByRaces.sort(function(a,b) { return a["key"] - b["key"]; });
-
   xScale.domain(years);
 
   // Add an SVG element for each symbol, with the desired dimensions and margin:
@@ -123,49 +124,6 @@ Array[7] races
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
       .each(multiple); // uses each to call the multiple code for each country
-
-
-  /*function makeData(nestedData) {
-
-    //Array[7] races
-    //...Object - Key: race, Male: array, Female: array
-
-    var allData = [];
-
-    nestedData.forEach(function(data) {
-      var raceData = {};
-
-      raceData["key"] = data["key"];
-
-      raceData["Female"] = d3.map(data, function(d) {
-        if (+d) {
-          return +d;
-        }
-      });
-
-    /*  raceData["Female"] = d["values"].forEach(function(i) {
-        var allValues = d3.values(i);
-        var genderData = [];
-        //console.log(allValues);
-
-        allValues.forEach(function(j) {
-          console.log("gender", allValues[13]);
-          if ((+j || +j == 0) && allValues[13] == "Female") {
-            genderData.push(+j);
-          }
-        });
-
-        console.log("genderData", genderData);
-        return genderData;
-
-      });
-
-
-      console.log("raceData", raceData);
-    });
-
-    return allData;
-  }*/
 
   function multiple(race) {
 
@@ -195,54 +153,67 @@ Array[7] races
         .call(yAxis)
       .append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", -20)
+        .attr("y", -33)
         //.attr("dy", ".71em")
         .style("text-anchor", "end")
         .text("Percentage of People");
 
-        yScale.domain([d3.max(yearValues), 0]);
+        yScale.domain([0, d3.max(yearValues)]);
 
-    /* yearGroup = thisSVG.selectAll("g.years")
-        .data(function(d) {
-          console.log(d);
-          return d;
-        })
-        .enter()
-        .append("g")
-        .attr("class", "years");
-        //.attr("width", xScale.rangeBand())
-        console.log(yearGroup);*/
-
-        var graphTitle = thisSVG.selectAll("text.gTitle")
-                      .data(function(d) {
-                        return d;
-                      })
-                      .enter()
-                        .append("text")
-                        .attr("class", "gTitle")
-                        .text(function(d) {
-                          return d["key"];
-                        });
+        // Adds graph title to each SVG.
+        thisSVG.append("text")
+              .attr("class", "label")
+              .attr("x", width/2)
+              .attr("y", -8)
+              .style("text-anchor", "middle")
+              .text(function(d) { return d["key"]; })
 
         var yearGroup = thisSVG
                     .append("g")
                     .attr("class", "years");
 
-        var bars = yearGroup.selectAll("rect")
+        var barGroups = yearGroup.selectAll("g.barGroup")
                   .data(years, function(d) {
                     return d;
                   })
-                  .enter().append("rect")
+                  .enter().append("g")
+                  .attr("class", "barGroup");
+
+        var bars = barGroups
+                 .append("rect")
+                 .attr("class", function(d) {
+                   return "y" + d;
+                 })
+                 .style("fill", "orange")
+                 .attr("x", function(d, i) {
+                   return xScale(years[i]);
+                 })
+                 .attr("y", function(d, i) {
+                   return yScale(yearValues[i]);
+                 })
+                 .attr("width", xScale.rangeBand())
+                 .attr("height", function(d, i) {
+                   return height - yScale(yearValues[i]);
+                 });
+
+          var barLabels = barGroups
+                  .append("text")
+                  .attr("class", "barLabel")
                   .attr("x", function(d, i) {
                     return xScale(years[i]);
                   })
                   .attr("y", function(d, i) {
-                    return height - yScale(yearValues[i]);
-                  })
-                  .attr("width", xScale.rangeBand())
-                  .attr("height", function(d, i) {
                     return yScale(yearValues[i]);
+                  })
+                  .attr("dx", 11)
+                  .attr("dy", 12)
+                  .style("text-anchor", "middle")
+                  .text(function(d, i) {
+                    if (yearValues[i] != 0) {
+                      return yearValues[i];
+                    }
                   });
+
 
           //bars
             //.on("mouseover", mouseover)
@@ -250,9 +221,67 @@ Array[7] races
             //.on("mouseout", mouseout);
 
 
+
         //console.log(yearGroup.data());
 
   } // end of the multiple function
+
+  function mouseover(d) {
+    var query = "rect." + "y" + d;
+    var allYearBars = d3.selectAll(query)
+      .transition()
+      .style("stroke", "black");
+
+    allTooltips = makeToolTips(allYearBars);
+
+    allTooltips.forEach(function(d, i) {
+      d.style("display", null)
+  					 /*.html("<p>Year: " + d.year + "</p>"
+  					 			+ "<p>Race: " + d["key"] + "</p>"
+  					 			+ "<p>Percent: " + d.percent + "%</p>"
+  				 		)*/
+              .html(function(e, i) {
+                console.log(e);
+              })
+
+    });
+
+  }
+
+  function mouseout(d) {
+    var query = "rect." + "y" + d;
+    var allYearBars = d3.selectAll(query)
+				.transition()
+				.style("stroke", "none");
+
+			//tooltip.style("display", "none");  // this sets it to invisible!
+
+      allTooltips.forEach(function(d) {
+        d.remove();
+      });
+	}
+
+  function mousemove(d) {
+    allTooltips.forEach(function(d) {
+      d.style("top", (d3.event.pageY - 10) + "px" )
+      .style("left", (d3.event.pageX + 10) + "px");
+    });
+
+  }
+
+  function makeToolTips(allYearBars) {
+    var data;
+    var tooltipsToReturn = [];
+
+    allYearBars.each(function(d) {
+      tooltip = d3.select("body").append("div").attr("class", "tooltip");
+      data = d3.select(this.parentNode.parentNode).data();
+      tooltip.data(data);
+      tooltipsToReturn.push(tooltip);
+    });
+
+    return tooltipsToReturn;
+  }
 
 });
 
