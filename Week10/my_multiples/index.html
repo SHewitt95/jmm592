@@ -56,6 +56,11 @@ path.domain {
 
   <p>Source: Data.gov, U.S. Department of Commerce, Census Bureau, Current Population Survey</p>
 
+  <div class="gender_buttons">
+    <button class="male">Male</button>
+    <button class="female">Female</button>
+  </div> <!-- End gender_buttons -->
+
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 <script>
 
@@ -89,11 +94,9 @@ var yAxis = d3.svg.axis()
       .innerTickSize(0)
       .tickFormat(d3.format("s"));
 
-var tooltip;
-
-var allTooltips = [];
-
 //d3.select("h2").text("Total Deaths Due to " + illness + " 2000-2013");
+
+  var selectedButton = "female";
 
 d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
 
@@ -130,14 +133,52 @@ d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
     //console.log(race);
     //console.log(race["values"][0]);
     var femaleValues = d3.values(race["values"][0]);
-    //console.log("values", values);
-    var yearValues = femaleValues.slice(0,13);
-    //console.log("yearValues", yearValues);
+    var femaleYearValues = femaleValues.slice(0,13);
+
+    var maleValues = d3.values(race["values"][1]);
+    var maleYearValues = maleValues.slice(0,13);
 
     var thisSVG = d3.select(this);
     //var numbers = d3.values();
     //console.log("Max val", d3.max(yearValues));
 
+    drawGraph(maleYearValues, thisSVG);
+
+    //yScale.domain([0, d3.max(yearValues)]);
+
+    // Axes
+    /*thisSVG.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll("text")
+          .attr("dy", ".5em")
+          .attr("transform", "rotate(-30)")
+          .style("text-anchor", "end");
+
+    thisSVG.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -33)
+        //.attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Percentage of People");*/
+
+    // Adds graph title to each SVG.
+    thisSVG.append("text")
+          .attr("class", "label")
+          .attr("x", width/2)
+          .attr("y", -8)
+          .style("text-anchor", "middle")
+          .text(function(d) { return d["key"]; })
+
+
+
+  } // end of the multiple function
+
+  function drawGraph(yearValues, thisSVG) {
     yScale.domain([0, d3.max(yearValues)]);
 
     // Axes
@@ -159,14 +200,6 @@ d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
         //.attr("dy", ".71em")
         .style("text-anchor", "end")
         .text("Percentage of People");
-
-    // Adds graph title to each SVG.
-    thisSVG.append("text")
-          .attr("class", "label")
-          .attr("x", width/2)
-          .attr("y", -8)
-          .style("text-anchor", "middle")
-          .text(function(d) { return d["key"]; })
 
     var yearGroup = thisSVG
                 .append("g")
@@ -218,11 +251,16 @@ d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
                 }
               });
 
-        barGroups
-          .on("mouseover", mouseover)
-          .on("mouseout", mouseout);
 
-  } // end of the multiple function
+            barGroups
+              .on("mouseover", mouseover)
+              .on("mouseout", mouseout);
+
+  }
+
+  function swapGraph() {
+
+  }
 
   function mouseover(d) {
     var groups = d3.selectAll("#" + "y" + d);
