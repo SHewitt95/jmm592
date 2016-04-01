@@ -19,6 +19,10 @@ body {
   fill: #e7e7e7;
 }
 
+.selected {
+  background-color: pink;
+}
+
 .label {
   fill: steelblue;
 }
@@ -55,13 +59,17 @@ path.domain {
   <h2>College Enrollment</h2>
 
   <p>Source: Data.gov, U.S. Department of Commerce, Census Bureau, Current Population Survey</p>
+  <p>The charts represent the percentage of men per race/ethnicity who attend college. All the people are between age 18 and 24.</p>
+  <p>Missing bars represent years when an insufficient number of people responded to the Current Population Survey.</p>
 
-  <div class="gender_buttons">
-    <button class="male">Male</button>
-    <button class="female">Female</button>
-  </div> <!-- End gender_buttons -->
+  <!--div class="gender_buttons">
+    <button id="male" class="selected">Male</button>
+    <button id="female">Female</button>
+  </div--> <!-- End gender_buttons -->
 
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+  <!--script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script-->
+<script type="text/javascript" src="d3.min.js"></script>
 <script>
 
 
@@ -96,7 +104,7 @@ var yAxis = d3.svg.axis()
 
 //d3.select("h2").text("Total Deaths Due to " + illness + " 2000-2013");
 
-  var selectedButton = "female";
+  var selectedButton = "male";
 
 d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
 
@@ -144,7 +152,55 @@ d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
 
     drawGraph(maleYearValues, thisSVG);
 
-    //yScale.domain([0, d3.max(yearValues)]);
+    var buttons = d3.selectAll("button");
+    buttons
+      .on("click", function() {
+        buttons.classed("selected", false);
+
+        var thisButton = d3.select(this);
+        thisButton.classed("selected", true);
+
+        if (thisButton.attr("id") === "male") {
+          console.log("Male!");
+          swapGraph(maleYearValues);
+        } else {
+          console.log("Female!");
+          swapGraph(femaleYearValues);
+        }
+      })
+
+    // Axes
+    thisSVG.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll("text")
+          .attr("dy", ".5em")
+          .attr("transform", "rotate(-30)")
+          .style("text-anchor", "end");
+
+    thisSVG.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -33)
+        //.attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Percentage of People");
+
+    // Adds graph title to each SVG.
+    thisSVG.append("text")
+          .attr("class", "label")
+          .attr("x", width/2)
+          .attr("y", -8)
+          .style("text-anchor", "middle")
+          .text(function(d) { return d["key"]; })
+
+  } // end of the multiple function
+
+  function drawGraph(yearValues, thisSVG) {
+    yScale.domain([0, d3.max(yearValues)]);
 
     // Axes
     /*thisSVG.append("g")
@@ -166,40 +222,7 @@ d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
         .style("text-anchor", "end")
         .text("Percentage of People");*/
 
-    // Adds graph title to each SVG.
-    thisSVG.append("text")
-          .attr("class", "label")
-          .attr("x", width/2)
-          .attr("y", -8)
-          .style("text-anchor", "middle")
-          .text(function(d) { return d["key"]; })
-
-
-
-  } // end of the multiple function
-
-  function drawGraph(yearValues, thisSVG) {
-    yScale.domain([0, d3.max(yearValues)]);
-
-    // Axes
-    thisSVG.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis)
-        .selectAll("text")
-          .attr("dy", ".5em")
-          .attr("transform", "rotate(-30)")
-          .style("text-anchor", "end");
-
-    thisSVG.append("g")
-        .attr("class", "y axis")
-        .call(yAxis)
-      .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", -33)
-        //.attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text("Percentage of People");
+    thisSVG.select("y.axis").call(yAxis);
 
     var yearGroup = thisSVG
                 .append("g")
@@ -258,7 +281,15 @@ d3.csv("Race_Gender_Education_Data.csv", typeFix, function(error, data) {
 
   }
 
-  function swapGraph() {
+  function swapGraph(yearValues) {
+
+    var allSVG = d3.selectAll("svg");
+    console.log("allSVG", allSVG);
+    console.log("yearValues", yearValues);
+
+
+
+
 
   }
 
